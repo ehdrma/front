@@ -1,20 +1,39 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import Login from './Login';
+import Signup from './Signup';
+import SignComplete from './SignComplete';
+import Home from './Home';
+import Menu from './Menu';
+import Learning from './Learning';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+const Stack = createStackNavigator();
+const Drawer = createDrawerNavigator();
+
+function MainStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Signup" component={Signup} />
+            <Stack.Screen name="SignComplete" component={SignComplete} />
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen name="Learning" component={Learning} />
+        </Stack.Navigator>
+    );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+    return (
+        <NavigationContainer>
+            <Drawer.Navigator
+                drawerContent={(props) => <Menu {...props} />}
+                screenOptions={{
+                    headerShown: false,
+                    drawerType: "front"}}>
+                <Drawer.Screen name="MainStack" component={MainStack} />
+            </Drawer.Navigator>
+        </NavigationContainer>
+    );
+}
