@@ -1,107 +1,127 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, TextInput, StatusBar, Dimensions, FlatList } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { DrawerActions } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
-
-const windowWidth = Dimensions.get('window').width;
-const windowHeight = Dimensions.get('window').height;
 
 const Learning = ({ route }) => {
     const { article } = route.params;
     const navigation = useNavigation();
     const [isTranslated, setIsTranslated] = useState(true);
     const [showOriginal, setShowOriginal] = useState(true);
-  
+    const [bodyContent, setBodyContent] = useState(article.body);
+
+    useEffect(() => {
+        setBodyContent(showOriginal ? article.body : isTranslated ? article.translatedText : article.body);
+    }, [showOriginal, isTranslated, article]);
+
     const handleMenuPress = () => {
-      navigation.dispatch(DrawerActions.openDrawer());
-    };
-  
-    const handleBackPress = () => {
-      navigation.goBack(); // 뒤로 가기
+        navigation.dispatch(DrawerActions.openDrawer());
     };
 
-  
+    const handleBackPress = () => {
+        navigation.goBack();
+    };
+
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
-          <Image source={require('./assets/menu.png')} style={styles.menu} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-          <Image source={require('./assets/back.png')} style={styles.back} resizeMode="contain" />
-        </TouchableOpacity>
-        <Text style={styles.title}>
-          {showOriginal
-            ? article.title
-            : isTranslated
-            ? article.translatedTitle
-            : article.title}
-        </Text>
-        <View style={styles.bodyContainer}>
-          <Text style={styles.body}>
-            {showOriginal
-              ? article.body
-              : isTranslated
-              ? article.translatedBody
-              : article.body}
-          </Text>
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
+                    <Image source={require('./assets/menu.png')} style={styles.menu} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+                    <Image source={require('./assets/back.png')} style={styles.back} resizeMode="contain" />
+                </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                <Text style={styles.title}>
+                    {showOriginal
+                        ? article.title
+                        : isTranslated
+                        ? article.translatedTitle
+                        : article.title}
+                </Text>
+                <View style={styles.bodyContainer}>
+                    <Text style={styles.body}>
+                        {bodyContent}
+                    </Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.translateButton}
+                    onPress={() => setShowOriginal(!showOriginal)}
+                >
+                    <View style={[styles.translateButtonInner, { backgroundColor: showOriginal ? '#990011' : '#d9d9d9' }]}>
+                        <Text style={[styles.translateButtonText, { color: showOriginal ? '#ffffff' : '#282828' }]}>
+                            {showOriginal ? '번역보기' : isTranslated ? '원문보기' : '번역보기'}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            </ScrollView>
         </View>
-        <TouchableOpacity
-          style={styles.translateButton}
-          onPress={() => setShowOriginal(!showOriginal)} // 번역보기 버튼을 누를 때 showOriginal 상태를 토글
-        >
-          <Text style={styles.translateButtonText}>
-            {showOriginal ? '번역보기' : isTranslated ? '원문보기' : '번역보기'}
-          </Text>
-        </TouchableOpacity>
-        <StatusBar style="auto" />
-      </ScrollView>
     );
-  };
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
         backgroundColor: '#FCF6F5',
     },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 85,
+        marginBottom: 7,
+    },
     menuButton: {
-        position: 'absolute',
-        top: windowHeight * 0.1, // 메뉴 버튼의 원하는 위치 조정
-        left: windowWidth * 0.1, // 메뉴 버튼의 원하는 위치 조정
+        left: 30,
+        width: 40,
+        height: 40,
+    },
+    backButton: {
+        right: 25,
+        width: 40,
+        height: 40,
     },
     menu: {
-        width: windowWidth * 0.09,
-        height: windowHeight * 0.047,
-        zIndex: 1, // 다른 요소보다 위에 표시되도록 설정
-    },
-
-    backButton: {
-        position: 'absolute',
-        right: windowWidth * 0.065,
-        top: windowHeight * 0.088,
+        width: '100%',
+        height: '100%',
     },
     back: {
-        width: windowWidth * 0.11,
-        height: windowHeight * 0.07,
+        width: '100%',
+        height: '100%',
+    },
+    scrollViewContent: {
+        padding: 25,
     },
     title: {
         fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 20,
-        marginTop: 60,
+        marginBottom: 25,
         textAlign: 'center',
+        letterSpacing: 1,
     },
     bodyContainer: {
         backgroundColor: '#fff',
-        padding: 25,
+        padding: 23,
         borderRadius: 10,
         elevation: 5,
     },
     body: {
         fontSize: 16,
+        letterSpacing: 1.5,
+    },
+    translateButton: {
+        marginTop: 15,
+        alignSelf: 'flex-end',
+    },
+    translateButtonInner: {
+        borderRadius: 25,
+        paddingVertical: 11,
+        paddingHorizontal: 16,
+    },
+    translateButtonText: {
+        fontSize: 15,
+        fontWeight: 'bold',
     },
 });
 

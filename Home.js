@@ -10,7 +10,7 @@ const Home = ({ navigation }) => {
 
   useEffect(() => {
     // 서버에서 기사 목록과 번역된 본문 가져오기
-    fetch('http://172.30.72.8:5000/articles')
+    fetch('http://192.168.219.107:5000/articles')
       .then(response => response.json())
       .then(data => {
         setArticles(data);
