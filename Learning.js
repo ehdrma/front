@@ -10,31 +10,54 @@ const windowHeight = Dimensions.get('window').height;
 const Learning = ({ route }) => {
     const { article } = route.params;
     const navigation = useNavigation();
-
+    const [isTranslated, setIsTranslated] = useState(true);
+    const [showOriginal, setShowOriginal] = useState(true);
+  
     const handleMenuPress = () => {
-        navigation.dispatch(DrawerActions.openDrawer());
+      navigation.dispatch(DrawerActions.openDrawer());
+    };
+  
+    const handleBackPress = () => {
+      navigation.goBack(); // 뒤로 가기
     };
 
-    const handleBackPress = () => {
-        navigation.goBack(); // 뒤로 가기
-    }
-
+  
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
-                <Image source={require('./assets/menu.png')} style={styles.menu} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-                <Image source={require('./assets/back.png')} style={styles.back} resizeMode="contain" />
-            </TouchableOpacity>
-            <Text style={styles.title}>{article.title}</Text>
-            <View style={styles.bodyContainer}>
-                <Text style={styles.body}>{article.body}</Text>
-            </View>
-        </ScrollView>
+        <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
+          <Image source={require('./assets/menu.png')} style={styles.menu} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <Image source={require('./assets/back.png')} style={styles.back} resizeMode="contain" />
+        </TouchableOpacity>
+        <Text style={styles.title}>
+          {showOriginal
+            ? article.title
+            : isTranslated
+            ? article.translatedTitle
+            : article.title}
+        </Text>
+        <View style={styles.bodyContainer}>
+          <Text style={styles.body}>
+            {showOriginal
+              ? article.body
+              : isTranslated
+              ? article.translatedBody
+              : article.body}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.translateButton}
+          onPress={() => setShowOriginal(!showOriginal)} // 번역보기 버튼을 누를 때 showOriginal 상태를 토글
+        >
+          <Text style={styles.translateButtonText}>
+            {showOriginal ? '번역보기' : isTranslated ? '원문보기' : '번역보기'}
+          </Text>
+        </TouchableOpacity>
+        <StatusBar style="auto" />
+      </ScrollView>
     );
-};
-
+  };
 
 const styles = StyleSheet.create({
     container: {
@@ -47,7 +70,7 @@ const styles = StyleSheet.create({
     menuButton: {
         position: 'absolute',
         top: windowHeight * 0.1, // 메뉴 버튼의 원하는 위치 조정
-        left: windowWidth * 0.07, // 메뉴 버튼의 원하는 위치 조정
+        left: windowWidth * 0.1, // 메뉴 버튼의 원하는 위치 조정
     },
     menu: {
         width: windowWidth * 0.09,
@@ -57,8 +80,8 @@ const styles = StyleSheet.create({
 
     backButton: {
         position: 'absolute',
-        right: windowWidth * 0.06,
-        top: windowHeight * 0.085,
+        right: windowWidth * 0.065,
+        top: windowHeight * 0.088,
     },
     back: {
         width: windowWidth * 0.11,

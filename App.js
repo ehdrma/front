@@ -33,6 +33,8 @@ export default function App() {
                     headerShown: false,
                     drawerType: "front"}}>
                 <Drawer.Screen name="MainStack" component={MainStack} />
+
+                
             </Drawer.Navigator>
         </NavigationContainer>
     );
