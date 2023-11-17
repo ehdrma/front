@@ -8,6 +8,8 @@ import SignComplete from './SignComplete';
 import Home from './Home';
 import Menu from './Menu';
 import Learning from './Learning';
+import WordQuiz from './WordQuiz';
+import Review from './Review';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -20,6 +22,7 @@ function MainStack() {
             <Stack.Screen name="SignComplete" component={SignComplete} />
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="Learning" component={Learning} />
+            <Stack.Screen name="WordQuiz" component={WordQuiz} />
         </Stack.Navigator>
     );
 }
@@ -33,8 +36,7 @@ export default function App() {
                     headerShown: false,
                     drawerType: "front"}}>
                 <Drawer.Screen name="MainStack" component={MainStack} />
-
-                
+                <Drawer.Screen name="Review" component={Review} />
             </Drawer.Navigator>
         </NavigationContainer>
     );

@@ -36,9 +36,13 @@ const Login = ({ navigation }) => {
         password: password,
       });
 
-      // 로그인 성공 시 사용자 정보를 AsyncStorage에 저장 (자동 로그인을 위해)
-      await AsyncStorage.setItem('userToken', 'userTokenValue');
+     // 로그인 성공 시 사용자 정보를 가져옴
+    const { userId } = response.data;
 
+    // 로그인 성공 시 사용자 정보를 AsyncStorage에 저장 (자동 로그인을 위해)
+    await AsyncStorage.setItem('userToken', 'userTokenValue');
+    await AsyncStorage.setItem('userId', userId.toString()); // userId를 문자열로 저장
+    
       // 로그인 성공 처리
       navigation.navigate('Home');
 

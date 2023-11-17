@@ -26,14 +26,18 @@ const Home = ({ navigation }) => {
     navigation.navigate('Learning', { article: item });
   };
 
+  const handleWordQuizPress = () => {
+    navigation.navigate('WordQuiz');
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
         <Image source={require('./assets/menu.png')} style={styles.menu} />
       </TouchableOpacity>
       <Image source={require('./assets/human.png')} style={styles.human} />
-      <TouchableOpacity style={styles.Button}>
-        <Text style={styles.ButtonText}>오늘의 단어 퀴즈 GO!</Text>
+      <TouchableOpacity onPress={handleWordQuizPress} style={styles.Button}>
+        <Text style={styles.ButtonText}>오늘의 핵심 단어 GO!</Text>
       </TouchableOpacity>
       <Text style={styles.customText}>학습하고 싶은 기사를 골라보세요!</Text>
       <ScrollView
@@ -63,7 +67,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FCF6F5",
-    paddingHorizontal: windowWidth * 0.1,
+    paddingHorizontal: windowWidth * 0.09,
     paddingTop: windowHeight * 0.09,
   },
   menuButton: {
@@ -112,15 +116,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   articleListContainer: {
-    marginTop: windowHeight * 0.215,
-    paddingBottom: windowHeight * 0.05,
+    marginTop: windowHeight * 0.22,
+    paddingBottom: windowHeight * 0.1,
   },
   articleItem: {
     backgroundColor: '#fff',
-    padding: 20,
-    marginVertical: 10,
+    padding: 18,
+    marginVertical: 12,
+    marginHorizontal: 4,
     borderRadius: 8,
     elevation: 5,
+    shadowColor: '#c8c8c8', // 그림자 색상
+    shadowOffset: { width: 0, height: 0.5 }, // 그림자의 오프셋 (수평, 수직)
+    shadowOpacity: 0.8, // 그림자 투명도
+    shadowRadius: 4, // 그림자의 둥근 정도
   },
   articleTitle: {
     fontSize: 16,
