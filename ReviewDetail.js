@@ -1,4 +1,4 @@
-//Learning.js
+// ReviewDetail.js
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -16,12 +16,11 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Audio } from 'expo-av';
 import Slider from '@react-native-community/slider';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
-const Learning = ({ route }) => {
+const ReviewDetail = ({ route }) => {
   const { article } = route.params;
   const navigation = useNavigation();
   const [showOriginal, setShowOriginal] = useState(true);
@@ -40,7 +39,7 @@ const Learning = ({ route }) => {
   const [vsound, setvSound] = useState(null);
   const [visPlaying, vsetIsPlaying] = useState(false);
 
-const handlePlayVocaAudio = async (text) => {
+  const handlePlayVocaAudio = async (text) => {
     try {
       const response = await fetch('http://172.29.48.47:5000/text-to-speech', {
         method: 'POST',
@@ -76,9 +75,86 @@ const handlePlayVocaAudio = async (text) => {
     }
   };
 
+
   useEffect(() => {
     setBodyContent(showOriginal ? article.body : isTranslated ? article.translatedText : article.body);
   }, [showOriginal, isTranslated, article]);
+
+
+  const handlePlayAudio = async () => {
+    setIsLoading(true);
+  
+    try {
+      if (sound) {
+        if (isPlaying) {
+          await sound.pauseAsync();
+        } else {
+          await sound.playAsync();
+        }
+        setIsPlaying(!isPlaying);
+      } else {
+        // sound 객체가 없는 경우에만 새로 생성하도록 변경
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: article.audioUrl },
+          { shouldPlay: true } // shouldPlay 옵션 추가하여 생성과 동시에 재생
+        );
+  
+        setSound(sound);
+        setIsPlaying(true);
+  
+        // 음성의 재생 상태가 업데이트 될 때마다 호출되는 콜백 등록
+        const onPlaybackStatusUpdate = async (status) => {
+          if (status.didJustFinish) {
+            // 음성이 종료된 경우 재생 상태와 위치 초기화
+            setIsPlaying(false);
+            setPosition(0);
+          }
+        };
+  
+        // 콜백 등록
+        sound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+  
+        // 음성의 재생 시간을 가져오는 함수
+        const getAudioDuration = async () => {
+          const { durationMillis } = await sound.getStatusAsync();
+          setDuration(durationMillis);
+        };
+  
+        // 재생 시간 가져오기
+        getAudioDuration();
+      }
+    } catch (error) {
+      console.error('음성 변환 오류:', error);
+      Alert.alert('음성 변환 오류', '음성 변환 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleSliderChange = (value) => {
+    if (sound) {
+      const newPosition = value * duration;
+      setPosition(newPosition);
+      sound.setPositionAsync(newPosition);
+    }
+  };
+  
+ 
+  const handleTranslateToggle = () => {
+    setShowOriginal(!showOriginal);
+  };
+
+
+  const handleMenuPress = () => {
+    navigation.dispatch(DrawerActions.openDrawer());
+  };
+
+  const handleBackPress = () => {
+    if (sound) {
+      sound.unloadAsync();
+    }
+    navigation.goBack();
+  };
 
 // 핵심 어휘 버튼을 눌렀을 때 모달을 열고 버튼 색상 변경
 const toggleModal = () => {
@@ -92,140 +168,6 @@ const closeModal = () => {
   setIsVocabularyButtonPressed(false);
 };
 
-  const handleMenuPress = () => {
-    navigation.dispatch(DrawerActions.openDrawer());
-  };
-
-  const handleBackPress = () => {
-    if (sound) {
-      sound.unloadAsync();
-    }
-    navigation.goBack();
-  };
-
-  const handleTranslateToggle = () => {
-    setShowOriginal(!showOriginal);
-  };
-
-  const handlePlayAudio = async () => {
-    setIsLoading(true);
-    try {
-      if (sound) {
-        if (isPlaying) {
-          await sound.pauseAsync();
-        } else {
-          await sound.playAsync();
-        }
-        setIsPlaying(!isPlaying);
-      } else {
-        const response = await fetch('http://172.29.48.47:5000/text-to-speech', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: article.body,
-          }),
-        });
-
-        if (response.ok) {
-          const { audioUrl } = await response.json();
-
-          // AsyncStorage에 음성 URL 저장
-        await AsyncStorage.setItem('audioUrl', audioUrl);
-
-          const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
-          setSound(sound);
-          await sound.playAsync();
-          setIsPlaying(true);
-
-          const getAudioDuration = async () => {
-            const { durationMillis } = await sound.getStatusAsync();
-            setDuration(durationMillis);
-          };
-
-          if (sound) {
-            getAudioDuration();
-          }
-
-          return () => {
-            if (sound) {
-              sound.unloadAsync();
-            }
-          };
-        } else {
-          const errorResponse = await response.json();
-          Alert.alert('음성 변환 오류', errorResponse.error);
-        }
-      }
-    } catch (error) {
-      console.error('음성 변환 오류:', error);
-      Alert.alert('음성 변환 오류', '음성 변환 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSliderChange = (value) => {
-    if (sound) {
-      const newPosition = value * duration;
-      setPosition(newPosition);
-      sound.setPositionAsync(newPosition);
-    }
-  };
-
-  const checkAnswers = () => {
-    setShowCorrectAnswers(true);
-  };
-
-const handleLearnComplete = async () => {
-  try {
-    // AsyncStorage에서 현재까지의 학습 데이터 불러오기
-    const storedData = await AsyncStorage.getItem('learningData');
-    const learningData = storedData ? JSON.parse(storedData) : {};
-
-    // 현재 날짜 구하기
-    const currentDate = new Date().toISOString().split('T')[0];
-
-    // 음성 URL 얻기
-    const audioUrl = await AsyncStorage.getItem('audioUrl');
-
-    // 현재 학습 데이터에 새로운 데이터 추가
-    const newLearningItem = {
-      title: article.title,
-      body: article.body,
-      translatedTitle: article.translatedTitle,
-      translatedText: article.translatedText,
-      audioUrl: audioUrl,
-      quizzes: article.quizzes.map((quiz, index) => ({
-        question: quiz.question,
-        options: quiz.options,
-        correctAnswer: quiz.correctAnswer,
-        userAnswer: selectedAnswers[index],
-      })),
-      keywords: article.words.map((word) => ({
-        word: word.word,
-        meaning: word.meaning,
-      })),
-      date: currentDate,
-    };
-
-    if (learningData[currentDate]) {
-      learningData[currentDate].push(newLearningItem);
-    } else {
-      learningData[currentDate] = [newLearningItem];
-    }
-
-    // AsyncStorage에 업데이트된 학습 데이터 저장
-    await AsyncStorage.setItem('learningData', JSON.stringify(learningData));
-
-    // 홈 화면으로 이동
-    navigation.navigate('Home');
-  } catch (error) {
-    console.error('학습 데이터 저장 오류:', error);
-  }
-};
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -236,7 +178,6 @@ const handleLearnComplete = async () => {
           <Image source={require('./assets/back.png')} style={styles.back} resizeMode="contain" />
         </TouchableOpacity>
       </View>
-
       <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>
           {showOriginal
@@ -274,8 +215,8 @@ const handleLearnComplete = async () => {
   >
     핵심 어휘
   </Text>
-</TouchableOpacity>
-        <View style={styles.buttonContainer}>
+  </TouchableOpacity>
+  <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[
               styles.button,
@@ -330,147 +271,109 @@ const handleLearnComplete = async () => {
             </Text>
           </TouchableOpacity>
         </View>
-        
 
         <Modal
   visible={isModalVisible}
   animationType="slide"
   transparent={true}
   onRequestClose={closeModal}
->
-  <View style={styles.modalContainer}>
+> 
+<View style={styles.modalContainer}>
   <ScrollView
     style={{ width: '87.5%', maxHeight: '50%', ...styles.wordListContainer, }}  // 필요에 따라 조절
-    contentContainerStyle={{  paddingVertical: 15,      }}
+    contentContainerStyle={{       }}
     showsVerticalScrollIndicator={false}
   >
-<View style={styles.textContainer}>
+    <View style={styles.textContainer}>
   <Text style={styles.text1}>단어를 누르면 발음을 들을 수 있어요!</Text>
 </View>
-{article.words.map((word, index) => (
+    {article.keywords && article.keywords.map((word, index) => (
+ <TouchableOpacity
+ key={index}
+ style={styles.wordItem}
+ onPress={() => {stopAudio(); handlePlayVocaAudio(word.word)}}
+><View style={styles.wordItemContent}>
+ <Text style={styles.word}>{word.word}</Text>
+ <Text style={styles.meaning}>{word.meaning}</Text></View>
+</TouchableOpacity>
+    ))}
+  </ScrollView>
   <TouchableOpacity
-    key={index}
-    style={styles.wordItem}
-    onPress={() => {
-      stopAudio();
-      handlePlayVocaAudio(word.word);
-    }}
+    style={styles.modalCloseButton}
+    onPress={closeModal}
   >
-    <View style={styles.wordItemContent}>
-      <Text style={styles.word}>{word.word}</Text>
-      <Text style={styles.meaning}>{word.meaning}</Text>
-    </View>
+    <Text style={styles.modalCloseButtonText}>X</Text>
   </TouchableOpacity>
-))}
-    </ScrollView>
-    <TouchableOpacity
-      style={styles.modalCloseButton}
-      onPress={closeModal}
-    >
-      <Text style={styles.modalCloseButtonText}>X</Text>
-    </TouchableOpacity>
-  </View>
+</View>
 </Modal>
+<View style={styles.quizContainer}>
+  {article.quizzes.map((quiz, quizIndex) => (
+    <View key={quizIndex} style={styles.quizItem}>
+      <Text style={styles.quizQuestion}>{quiz.question}</Text>
 
-        {/* 추가된 코드: 퀴즈 섹션 */}
-        <View style={styles.quizContainer}>
-          {article.quizzes.map((quiz, index) => (
-            <View key={index} style={styles.quizItem}>
-              <Text style={styles.quizQuestion}>{quiz.question}</Text>
-              <View style={styles.quizOptions}>
-              {quiz.options.map((option, optionIndex) => (
-  <TouchableOpacity
-    key={optionIndex}
-    style={[
-      styles.quizOption,
-      {
-        backgroundColor:
-          showCorrectAnswers &&
-          selectedAnswers[index] === option &&
-          selectedAnswers[index] === quiz.correctAnswer
-            ? 'rgba(153, 0, 17, 0.15)' // 정답
-            : showCorrectAnswers &&
-              selectedAnswers[index] === option &&
-              selectedAnswers[index] !== quiz.correctAnswer
-            ? 'rgba(153, 0, 17, 0.15)' // 오답
-            : selectedAnswers[index] === option
-            ? 'rgba(153, 0, 17, 0.15)' // 선택된 답
-            : '#d9d9d9', // 선택되지 않은 상태 (회색)
-      },
-    ]}
-    onPress={() => {
-      const newSelectedAnswers = [...selectedAnswers];
-      newSelectedAnswers[index] = option;
-      setSelectedAnswers(newSelectedAnswers);
-    }}
-    disabled={showCorrectAnswers}
-  >
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Text
-        style={{
-          color:
-            selectedAnswers[index] === option
-              ? '#282828'
-              : selectedAnswers[index] === null
-              ? '#282828'
-              : '#777777',
-        }}
-      >
-        {option}
-      </Text>
-      {showCorrectAnswers &&
-        ((selectedAnswers[index] === option && selectedAnswers[index] === quiz.correctAnswer) ||
-          (selectedAnswers[index] !== option && option === quiz.correctAnswer)) && (
+      {/* 퀴즈 옵션 버튼 렌더링 */}
+      {quiz.options.map((option, optionIndex) => {
+        const isSelected = quiz.userAnswer && quiz.userAnswer.split(',').includes(option);
+        const isCorrect = quiz.correctAnswer && quiz.correctAnswer.split(',').includes(option);
+        const isUserAnswerCorrect = isSelected && isCorrect;
+  const isUserAnswerIncorrect = isSelected && !isCorrect;
+
+        return (
+          <TouchableOpacity
+            key={optionIndex}
+            style={[
+              styles.quizOption,
+              {
+                backgroundColor: isSelected ? 'rgba(153, 0, 17, 0.15)' : '#d9d9d9',
+              },
+            ]}
+            disabled={true} // 버튼 비활성화
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text
+                style={{
+                  color: isSelected ? '#282828' : '#777777',
+                }}
+              >
+                {option}
+              </Text>
+              {isCorrect &&  (
           <MaterialCommunityIcons
             name="check-bold"
             size={21}
             color="#4CAF50"
-            style={{ marginLeft: 4 }}
+            style={{ marginLeft: 4, zIndex: 1 }}
           />
         )}
-      {showCorrectAnswers &&
-        selectedAnswers[index] === option &&
-        selectedAnswers[index] !== quiz.correctAnswer && (
+        {isUserAnswerIncorrect && (
           <MaterialCommunityIcons
             name="close"
             size={21}
             color="#FF5733"
-            style={{ marginLeft: 4 }}
+            style={{ marginLeft: 4, zIndex: 1 }}
           />
         )}
-    </View>
-  </TouchableOpacity>
-))}
-              </View>
-              {showCorrectAnswers && (
-                <Text style={styles.correctAnswer}>
-                  정답: {quiz.correctAnswer}
-                </Text>
-              )}
             </View>
-          ))}
-          {showCorrectAnswers ? null : (
-            <TouchableOpacity
-              style={styles.checkAnswerButton}
-              onPress={checkAnswers}
-              disabled={selectedAnswers.some((answer) => answer === null) || showCorrectAnswers}
-            >
-              <Text style={styles.checkAnswerButtonText}>정답 확인</Text>
-            </TouchableOpacity>
-          )}
-          {showCorrectAnswers && (
-            <TouchableOpacity style={styles.learnCompleteButton} onPress={handleLearnComplete}>
-              <Text style={styles.learnCompleteButtonText}>학습 완료</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          </TouchableOpacity>
+        );
+      })}
+
+      {/* 정답과 사용자 답안 표시 */}
+      <Text style={styles.correctAnswer}>{`정답: ${quiz.correctAnswer}`}</Text>
+    </View>
+  ))}
+</View>
+
       </ScrollView>
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
+  correctAnswer: {
+    fontSize: 14,
+    color: '#007900', // 정답 텍스트의 색상
+  },
   container: {
     flex: 1,
     backgroundColor: '#FCF6F5',
@@ -516,58 +419,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 5,
     marginBottom: 16,
-    shadowColor: '#c8c8c8', // 그림자 색상
-    shadowOffset: { width: 0, height: 0.5 }, // 그림자의 오프셋 (수평, 수직)
-    shadowOpacity: 0.8, // 그림자 투명도
-    shadowRadius: 4, // 그림자의 둥근 정도
+    shadowColor: '#c8c8c8',
+    shadowOffset: { width: 0, height: 0.5 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   body: {
     fontSize: 16,
     letterSpacing: 1.5,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center', // 세로 가운데 정렬을 위해 추가
-  },
-  slider: {
-    flex: 1, // 슬라이더가 가득 차도록 설정
-    marginHorizontal: 20,
-  },
-  button: {
-    borderRadius: 25,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  quizContainer: {
-    marginTop: 26,
-  },
-  quizItem: {
-    marginBottom: 20,
-  },
-  quizQuestion: {
-    fontSize: 16,
-    marginBottom: 15,
-    fontWeight: '500',
-  },
-  quizOptions: {
-    flexDirection: 'column',
-    marginBottom: 5,
-  },
-  quizOption: {
-    fontSize: 16,
-    paddingVertical: 10, // 위아래 여백을 조절하여 박스 크기 조절
-    paddingHorizontal: 22, // 좌우 여백을 조절하여 박스 크기 조절
-    marginBottom: 10,
-    borderRadius: 8,
-  },
-  correctAnswer: {
-    fontSize: 14,
-    color: '#007900', // 정답 텍스트의 색상
   },
   checkAnswerButton: {
     backgroundColor: '#d9d9d9',
@@ -579,19 +438,6 @@ const styles = StyleSheet.create({
   },
   checkAnswerButtonText: {
     color: '#282828',
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
-  learnCompleteButton: {
-    backgroundColor: '#990011',
-    borderRadius: 17,
-    padding: 10,
-    marginTop: 10,
-    marginBottom: 15,
-    alignItems: 'center',
-  },
-  learnCompleteButtonText: {
-    color: '#ffffff',
     fontWeight: 'bold',
     fontSize: 15,
   },
@@ -640,6 +486,47 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: 'bold',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center', // 세로 가운데 정렬을 위해 추가
+  },
+  slider: {
+    flex: 1, // 슬라이더가 가득 차도록 설정
+    marginHorizontal: 20,
+  },
+  button: {
+    borderRadius: 25,
+    paddingVertical: 11,
+    paddingHorizontal: 16,
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  quizContainer: {
+    marginTop: 26,
+    marginBottom: 15,
+  },
+  quizItem: {
+    marginBottom: 20,
+  },
+  quizQuestion: {
+    fontSize: 16,
+    marginBottom: 15,
+    fontWeight: '500',
+  },
+  quizOptions: {
+    flexDirection: 'column',
+    marginBottom: 5,
+  },
+  quizOption: {
+    fontSize: 16,
+    paddingVertical: 10, // 위아래 여백을 조절하여 박스 크기 조절
+    paddingHorizontal: 22, // 좌우 여백을 조절하여 박스 크기 조절
+    marginBottom: 10,
+    borderRadius: 8,
+  },
   text1: {
     color: '#6E696D',
     fontSize: windowWidth * 0.035,
@@ -652,7 +539,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     marginBottom: windowHeight * 0.04,
+    marginTop: 17.5,
   },
 });
 
-export default Learning;
+export default ReviewDetail;

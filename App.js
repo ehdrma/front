@@ -10,6 +10,9 @@ import Menu from './Menu';
 import Learning from './Learning';
 import WordQuiz from './WordQuiz';
 import Review from './Review';
+import ReviewDetail from './ReviewDetail';
+import Vocabulary from './Vocabulary';
+
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -23,6 +26,9 @@ function MainStack() {
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="Learning" component={Learning} />
             <Stack.Screen name="WordQuiz" component={WordQuiz} />
+            <Stack.Screen name="Review" component={Review} />
+            <Stack.Screen name="ReviewDetail" component={ReviewDetail} />
+            <Stack.Screen name="Vocabulary" component={Vocabulary} />
         </Stack.Navigator>
     );
 }
@@ -36,7 +42,7 @@ export default function App() {
                     headerShown: false,
                     drawerType: "front"}}>
                 <Drawer.Screen name="MainStack" component={MainStack} />
-                <Drawer.Screen name="Review" component={Review} />
+
             </Drawer.Navigator>
         </NavigationContainer>
     );

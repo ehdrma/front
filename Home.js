@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, StatusBar, Dimensions, ScrollView, Button } from 'react-native';
 import { DrawerActions } from '@react-navigation/native';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+
 
 const Home = ({ navigation }) => {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     // 서버에서 기사 목록과 번역된 본문 가져오기
-    fetch('http://192.168.219.107:5000/articles')
+    fetch('http://172.29.48.47:5000/articles')
       .then(response => response.json())
       .then(data => {
         setArticles(data);
@@ -30,6 +31,9 @@ const Home = ({ navigation }) => {
     navigation.navigate('WordQuiz');
   };
 
+  
+  
+
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleMenuPress} style={styles.menuButton}>
@@ -37,7 +41,7 @@ const Home = ({ navigation }) => {
       </TouchableOpacity>
       <Image source={require('./assets/human.png')} style={styles.human} />
       <TouchableOpacity onPress={handleWordQuizPress} style={styles.Button}>
-        <Text style={styles.ButtonText}>오늘의 핵심 단어 GO!</Text>
+        <Text style={styles.ButtonText}>오늘의 단어 퀴즈 GO!</Text>
       </TouchableOpacity>
       <Text style={styles.customText}>학습하고 싶은 기사를 골라보세요!</Text>
       <ScrollView

@@ -11,7 +11,7 @@ const Signup = ({}) => {
 
     const handleSignup = async () => {
         try {
-            const response = await axios.post('http://192.168.219.107:5000/api/signup', {
+            const response = await axios.post('http://172.29.48.47:5000/api/signup', {
                 email: email,
                 password: password,
             });
